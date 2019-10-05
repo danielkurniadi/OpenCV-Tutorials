@@ -21,7 +21,7 @@ img_right = cv2.imread('./data/right_real.jpg', cv2.IMREAD_GRAYSCALE) # train im
 
 # Before we begin ...
 def draw_matching_keypoints(img_left, kp_left, img_right, kp_right, 
-                            matches, flags=cv2.DrawMatchesFlags_DEFAULT,
+                            matches, ratio_test=False, flags=cv2.DrawMatchesFlags_DEFAULT,
                             imshow_prefix="Random shit:"):
     """ Draw matching keypoints from keypoints and descriptor of two images.
     Ideally the two images are photograph of the same object but taken at different pov
@@ -51,7 +51,11 @@ def draw_matching_keypoints(img_left, kp_left, img_right, kp_right,
     cv2.waitKey(0) & 0xff
 
     # draw matching keypoints
-    img_match_kp = cv2.drawMatches(img_left, kp_left, img_right, kp_right, matches, 
+    if ratio_test:
+        img_match_kp = cv2.drawMatchesKnn(img_left, kp_left, img_right, kp_right, matches, 
+                None, flags=2)
+    else:
+        img_match_kp = cv2.drawMatches(img_left, kp_left, img_right, kp_right, matches, 
                 None, flags=flags) 
 
     cv2.imshow(imshow_prefix + 'Matching keypoints', img_match_kp)
@@ -79,13 +83,13 @@ bfmatcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
 matches = bfmatcher.match(desc_left, desc_right)
 matches = sorted(matches, key = lambda x:x.distance)
 
-draw_visualise_matcher(img_left, kp_left, img_right, kp_right, 
-                        matches, flags=cv2.DrawMatchesFlags_DEFAULT,
+draw_matching_keypoints(img_left, kp_left, img_right, kp_right, 
+                        matches[:10], flags=cv2.DrawMatchesFlags_DEFAULT,
                         imshow_prefix="BFMatcher+ORB: ")
 
 
 # -----------------------------------
-# Brute Force Matcher with ORB
+# Brute Force Matcher (KNN) with SIFT
 # -----------------------------------
 
 # sift is deprecated from opencv 3.4.2 onwards
@@ -95,11 +99,18 @@ sift = cv2.xfeatures2d.SIFT_create() # cv2.SIFT() for opencv 3.4.1 <
 kp_left, desc_left = sift.detectAndCompute(img_left, None)
 kp_right, desc_right = sift.detectAndCompute(img_right, None)
 
-matches = bfmatcher.match(desc_left, desc_right)
-matches = sorted(matches, key = lambda x:x.distance)
+bfmatcher = cv2.BFMatcher()
+matches = bfmatcher.knnMatch(desc_left, desc_right, k=2)
 
-draw_visualise_matcher(img_left, kp_left, img_right, kp_right, 
-                        matches, flags=cv2.DrawMatchesFlags_DEFAULT,
+good_matches = []
+
+# ratio test as per Lowe's paper
+for (m,n) in matches:
+    if m.distance < 0.7 * n.distance:
+        good_matches.append([m])
+
+draw_matching_keypoints(img_left, kp_left, img_right, kp_right, 
+                        good_matches[:10], ratio_test=True, flags=cv2.DrawMatchesFlags_DEFAULT,
                         imshow_prefix="BFMatcher+SIFT: ")
 
 # -----------------------------------
