@@ -76,7 +76,7 @@ axisCube = np.float32(
 	[[0,0,0], [0,3,0], [3,3,0], [3,0,0],
 	[0,0,-3],[0,3,-3],[3,3,-3],[3,0,-3]])
 
-imagepaths = glob.glob("data/*.jpg")
+imagepaths = glob.glob("data/left*[0-9].jpg")
 
 # find chessboard corners for every checkerboard in folders './data'
 for fname in imagepaths:

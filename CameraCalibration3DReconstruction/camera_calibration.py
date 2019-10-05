@@ -30,8 +30,8 @@ objp[:,:2] = np.mgrid[0:7, 0:6].T.reshape(-1, 2)
 objpoints_list = []  # 3d point in real space 
 imgpoints_list = []  # 2d point in image plane
 
-# load image
-imagepaths = glob.glob("data/*.jpg")
+# load image of checker boards
+imagepaths = glob.glob("data/left*[0-9].jpg")
 
 # find chessboard corners for every image in folders './data'
 for fname in imagepaths:
