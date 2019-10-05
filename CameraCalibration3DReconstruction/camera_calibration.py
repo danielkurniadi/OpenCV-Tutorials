@@ -1,6 +1,6 @@
 """ CAMERA CALIBRATION TUTORIAL
 
-The Goal for this first post will be to help you learn about camera distortions 
+The Goal for this tutorial will be to help you learn about camera distortions 
 that are typically present in photos taken with common pinhole cameras. 
 We will also learn the definition and differences between intrinsic vs extrinsic 
 parameters of the camera and why they are needed in our code. 
@@ -45,11 +45,11 @@ for fname in imagepaths:
         objpoints_list.append(objp)
         
         # refining points of found corners
-        cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
+        corners2  = cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
         imgpoints_list.append(corners)
 
         # draw chessboard corners on image for visualisation
-        cv2.drawChessboardCorners(img, (7,6), corners, success)
+        cv2.drawChessboardCorners(img, (7,6), corners2, success)
         cv2.imshow(fname, img)
         cv2.waitKey(500)
 
@@ -58,7 +58,7 @@ cv2.destroyAllWindows()
 img = cv2.imread('data/left11.jpg') # pick an image to demo calibration
 height, width, channel = img.shape
 
-# camera calibration correction of image
+# camera calibration using image points and object points
 # yield: camera matrix, distortion coef, rotation & translation vectors
 success, matrix, distortion, rvecs, tvecs = cv2.calibrateCamera(objpoints_list, 
     imgpoints_list, (width, height), None, None)
@@ -71,7 +71,12 @@ dist = cv2.undistort(img, matrix, distortion, None, newcameramtx)
 # crop the image
 x, y, w, h = roi
 dist = dist[y:y+h, x:x+w]
-cv2.imwrite('artifacts/calibresult.png', dist)
+cv2.imwrite('artifacts/calibresult11.png', dist)
 
 cv2.imshow('calibresult', dist)
 cv2.waitKey(500)
+
+# save matrix, distortion coef, rotation, translation
+# with np.savez()
+outfile = "artifacts/calibresult.npz"
+np.savez(outfile, mtx=matrix, distr=distortion, rvecs=rvecs, tvecs=tvecs)
